@@ -1,0 +1,42 @@
+[
+  {
+    "cid": 0,
+    "name": "id",
+    "type": "INTEGER",
+    "notnull": 0,
+    "dflt_value": null,
+    "pk": 1
+  },
+  {
+    "cid": 1,
+    "name": "user_id",
+    "type": "INTEGER",
+    "notnull": 0,
+    "dflt_value": null,
+    "pk": 0
+  },
+  {
+    "cid": 2,
+    "name": "target_qty",
+    "type": "REAL",
+    "notnull": 0,
+    "dflt_value": null,
+    "pk": 0
+  },
+  {
+    "cid": 3,
+    "name": "target_date",
+    "type": "DATE",
+    "notnull": 0,
+    "dflt_value": "date('now')",
+    "pk": 0
+  },
+  {
+    "cid": 4,
+    "name": "status",
+    "type": "TEXT",
+    "notnull": 0,
+    "dflt_value": "'Pending'",
+    "pk": 0
+  }
+]

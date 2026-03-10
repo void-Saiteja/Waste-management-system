@@ -1,0 +1,7 @@
+node_modules/
+waste_management.db
+logs/*.csv
+logs/*.pdf
+.env
+.DS_Store
+*.log

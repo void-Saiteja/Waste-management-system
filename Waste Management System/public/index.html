@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTrack | Smart Waste Management System</title>
+    <meta name="description"
+        content="AI-powered smart waste management with real-time monitoring, role-based dashboards and predictive analytics.">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body>
+
+    <!-- ═══════════════════ NAVBAR ═══════════════════ -->
+    <nav id="main-nav">
+        <div class="logo">
+            <span class="logo-icon">♻️</span>
+            <span class="gradient-text logo-text">EcoTrack</span>
+            <span class="logo-sub">Smart Waste</span>
+        </div>
+        <div id="user-nav" style="display:none;" class="nav-right">
+            <div class="user-chip">
+                <span>👤</span>
+                <span id="display-username"></span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="logout()">Sign Out</button>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════ LOGIN ═══════════════════ -->
+    <div id="login-section" class="auth-container">
+        <div class="glass-panel auth-card">
+            <div class="auth-logo">
+                <div style="font-size:3rem;margin-bottom:.5rem;">♻️</div>
+                <h1 class="gradient-text" style="font-size:2rem;font-weight:800;">EcoTrack</h1>
+                <p class="text-dim text-sm" style="margin-top:.3rem;">Smart Waste Management System</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="tab-btn active" id="tab-login" onclick="toggleAuth('login')">Login</button>
+                <button class="tab-btn" id="tab-register" onclick="toggleAuth('register')">Register</button>
+            </div>
+
+            <h2 id="auth-title" style="font-size:1.3rem;font-weight:700;margin-bottom:1.5rem;">Welcome Back</h2>
+
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="Enter your username" autocomplete="username"
+                    onkeyup="if(event.key==='Enter')handleAuth()">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password"
+                    onkeyup="if(event.key==='Enter')handleAuth()">
+            </div>
+            <div class="input-group" id="role-group" style="display:none;">
+                <label>Account Type</label>
+                <select id="reg-role">
+                    <option value="staff">👷 Campus Staff</option>
+                    <option value="admin">⚙️ Administrator</option>
+                </select>
+            </div>
+
+            <button id="auth-btn" class="btn btn-primary btn-full" onclick="handleAuth()">Sign In</button>
+            <p class="text-dim text-sm" style="text-align:center;margin-top:1rem;">Default: <code
+                    style="color:var(--primary);">admin / admin123</code></p>
+        </div>
+    </div>
+
+    <!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+    <div id="dashboard-section" style="display:none;">
+
+        <!-- Page Tabs -->
+        <div class="page-tabs" id="page-tabs">
+            <button class="page-tab" onclick="showPage('overview')" id="tab-overview">📊 Overview</button>
+            <button class="page-tab" onclick="showPage('bins')" id="tab-bins">🗑️ Bins</button>
+            <button class="page-tab" onclick="showPage('logs')" id="tab-logs">📋 Logs</button>
+            <button class="page-tab" onclick="showPage('alerts')" id="tab-alerts">
+                🚨 Alerts <span id="alert-badge" class="tab-badge" style="display:none;">0</span>
+            </button>
+            <!-- Admin only -->
+            <button class="page-tab admin-only" onclick="showPage('admin')" id="tab-admin">👥 Staff</button>
+            <!-- Staff only -->
+            <button class="page-tab staff-only" onclick="showPage('mytarget')" id="tab-mytarget">🎯 My Goal</button>
+            <!-- Map tab (all users) -->
+            <button class="page-tab" onclick="showPage('map')" id="tab-map">🗺️ Campus Map</button>
+        </div>
+
+        <div class="container" id="page-container">
+
+            <!-- ══════ PAGE: OVERVIEW ══════ -->
+            <div id="page-overview" class="page active">
+
+                <!-- Stat Cards -->
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🗑️</div>
+                        <div>
+                            <div class="stat-val" id="val-bins">—</div>
+                            <div class="stat-label">Total Bins</div>
+                            <div class="stat-trend">Monitored</div>
+                        </div>
+                    </div>
+                    <div class="stat-card warn">
+                        <div class="stat-icon">⚠️</div>
+                        <div>
+                            <div class="stat-val" id="val-full">—</div>
+                            <div class="stat-label">Full / Critical</div>
+                            <div class="stat-trend bad" id="val-full-trend">Needs Action</div>
+                        </div>
+                    </div>
+                    <div class="stat-card suc">
+                        <div class="stat-icon">📦</div>
+                        <div>
+                            <div class="stat-val" id="val-waste">—</div>
+                            <div class="stat-label">Waste Today (kg)</div>
+                            <div class="stat-trend">Collected</div>
+                        </div>
+                    </div>
+                    <div class="stat-card acc">
+                        <div class="stat-icon">🚨</div>
+                        <div>
+                            <div class="stat-val" id="val-alerts">—</div>
+                            <div class="stat-label">Active Alerts</div>
+                            <div class="stat-trend bad" id="val-alert-trend">Live</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin simulate row -->
+                <div class="admin-only mb-2 flex gap-sm" style="flex-wrap:wrap;">
+                    <button class="btn btn-sim" onclick="simulateDay()" id="sim-btn">🎲 Simulate One Day</button>
+                    <button class="btn btn-outline" onclick="resetAllBins()">🔄 Reset All Bins</button>
+                    <button class="btn btn-outline" onclick="exportCSV()">📥 Export CSV</button>
+                    <span id="sim-status" class="text-dim text-sm" style="align-self:center;"></span>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts-grid">
+                    <div class="glass-panel">
+                        <div class="card-title">📈 Waste Per Day (kg)</div>
+                        <canvas id="trendChart" style="max-height:260px;"></canvas>
+                    </div>
+                    <div class="glass-panel">
+                        <div class="card-title">🥧 Waste Categories</div>
+                        <canvas id="categoryChart" style="max-height:260px;"></canvas>
+                    </div>
+                    <div class="glass-panel">
+                        <div class="card-title">📊 Bin Fill Levels</div>
+                        <canvas id="binFillChart" style="max-height:260px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════ PAGE: BINS ══════ -->
+            <div id="page-bins" class="page">
+                <!-- Add Bin (Admin) -->
+                <div class="glass-panel admin-only mb-2">
+                    <div class="card-title">➕ Add New Bin</div>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Bin Name</label>
+                            <input type="text" id="new-bin-name" placeholder="e.g. Bin-F6">
+                        </div>
+                        <div class="input-group">
+                            <label>Location</label>
+                            <input type="text" id="new-bin-location" placeholder="e.g. Parking Lot">
+                        </div>
+                        <div class="input-group">
+                            <label>Capacity (kg)</label>
+                            <input type="number" id="new-bin-capacity" placeholder="100" min="1">
+                        </div>
+                        <div class="input-group" style="display:flex;align-items:flex-end;">
+                            <button class="btn btn-primary" style="width:100%;" onclick="addBin()">Add Bin</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bins Grid -->
+                <div id="bins-grid" class="bins-grid"></div>
+
+                <!-- Log Waste -->
+                <div class="glass-panel mt-2">
+                    <div class="card-title">📝 Log Waste Entry</div>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Select Bin</label>
+                            <select id="bin-select"></select>
+                        </div>
+                        <div class="input-group">
+                            <label>Waste Type</label>
+                            <select id="waste-type">
+                                <option value="Bio-degradable">🌿 Bio-degradable</option>
+                                <option value="Plastic">🧴 Plastic</option>
+                                <option value="Paper">📄 Paper</option>
+                                <option value="Metal">🔩 Metal</option>
+                                <option value="E-Waste">💻 E-Waste</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Quantity (kg)</label>
+                            <input type="number" id="quantity" step="0.1" placeholder="0.0" min="0.1">
+                        </div>
+                        <div class="input-group" style="display:flex;align-items:flex-end;">
+                            <button class="btn btn-primary" style="width:100%;" onclick="submitWaste()">Submit
+                                Entry</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════ PAGE: LOGS ══════ -->
+            <div id="page-logs" class="page">
+                <div class="glass-panel">
+                    <div class="card-title">📋 Recent Activity Log
+                        <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 Export CSV</button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table id="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Bin</th>
+                                    <th>Waste Type</th>
+                                    <th>Quantity</th>
+                                    <th>Staff</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════ PAGE: ALERTS ══════ -->
+            <div id="page-alerts" class="page">
+                <div class="glass-panel">
+                    <div class="card-title">
+                        🚨 Active Alerts
+                        <span id="alert-count-pill" class="alert-pill">0</span>
+                    </div>
+                    <div id="alerts-list">
+                        <p class="text-dim text-sm" style="text-align:center;padding:2rem;">✅ No active alerts — all
+                            bins are good!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════ PAGE: ADMIN / STAFF ══════ -->
+            <div id="page-admin" class="page admin-only">
+                <!-- Create Staff -->
+                <div class="glass-panel mb-2">
+                    <div class="card-title">👷 Hire New Staff Member</div>
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <input type="text" id="new-staff-user" placeholder="e.g. john_doe">
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <input type="password" id="new-staff-pass" placeholder="min 6 characters">
+                        </div>
+                        <div class="input-group" style="display:flex;align-items:flex-end;">
+                            <button class="btn btn-primary" style="width:100%;" onclick="createStaff()">Hire
+                                Staff</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Stats Table -->
+                <div class="glass-panel mb-2">
+                    <div class="card-title">📈 Staff Activity & Daily Targets</div>
+                    <div style="overflow-x:auto;">
+                        <table id="staff-stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Today's Logs</th>
+                                    <th>Total Qty (kg)</th>
+                                    <th>Daily Target</th>
+                                    <th>Status</th>
+                                    <th>Set Target</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- All Users -->
+                <div class="glass-panel">
+                    <div class="card-title">🔑 All System Users</div>
+                    <div style="overflow-x:auto;">
+                        <table id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════ PAGE: MY TARGET (STAFF) ══════ -->
+            <div id="page-mytarget" class="page staff-only">
+                <div class="dash-grid">
+
+                    <!-- Target Progress -->
+                    <div class="glass-panel">
+                        <div class="card-title">🏆 My Daily Goal
+                            <span id="bonus-badge" class="bonus-badge" style="display:none;">🎉 TARGET MET!</span>
+                        </div>
+                        <div class="goal-row">
+                            <span id="target-progress-text" class="text-dim">No target set for today.</span>
+                            <span id="target-percent" class="goal-pct">—</span>
+                        </div>
+                        <div class="progress-bar-lg">
+                            <div id="target-fill" class="progress-fill fill-green" style="width:0%;"></div>
+                        </div>
+                        <p class="text-sm text-dim mt-1">Contact your admin to set a daily target.</p>
+                    </div>
+
+                    <!-- Staff Log Waste -->
+                    <div class="glass-panel">
+                        <div class="card-title">📝 Log My Waste Collection</div>
+                        <div class="input-group">
+                            <label>Select Bin</label>
+                            <select id="staff-bin-select"></select>
+                        </div>
+                        <div class="input-group">
+                            <label>Waste Type</label>
+                            <select id="staff-waste-type">
+                                <option value="Bio-degradable">🌿 Bio-degradable</option>
+                                <option value="Plastic">🧴 Plastic</option>
+                                <option value="Paper">📄 Paper</option>
+                                <option value="Metal">🔩 Metal</option>
+                                <option value="E-Waste">💻 E-Waste</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Quantity (kg)</label>
+                            <input type="number" id="staff-quantity" step="0.1" placeholder="0.0">
+                        </div>
+                        <button class="btn btn-primary btn-full" onclick="submitStaffWaste()">Submit Entry</button>
+                    </div>
+
+                    <!-- My Recent Logs -->
+                    <div class="glass-panel" style="grid-column:1/-1;">
+                        <div class="card-title">📋 My Recent Logs</div>
+                        <div style="overflow-x:auto;">
+                            <table id="my-logs-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Bin</th>
+                                        <th>Waste Type</th>
+                                        <th>Quantity (kg)</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════ PAGE: CAMPUS MAP ══════ -->
+            <div id="page-map" class="page">
+
+                <!-- Legend & Info bar -->
+                <div class="glass-panel mb-2">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+                        <div>
+                            <div class="card-title" style="margin-bottom:.4rem;">🗺️ Campus Bin Map — Anurag University,
+                                Ghatkesar</div>
+                            <p class="text-dim text-sm">Live bin locations. Click any marker to see fill level and
+                                status.</p>
+                        </div>
+                        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+                            <span class="map-legend-dot" style="background:#10b981;"></span><span
+                                class="text-sm">Good</span>
+                            <span class="map-legend-dot" style="background:#f59e0b;"></span><span
+                                class="text-sm">Medium</span>
+                            <span class="map-legend-dot" style="background:#ef4444;"></span><span class="text-sm">Full /
+                                Critical</span>
+                            <button class="btn btn-outline btn-sm" onclick="refreshMap()">🔄 Refresh</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map container -->
+                <div class="glass-panel" style="padding:.5rem;">
+                    <div id="campus-map" style="height:520px;border-radius:1rem;overflow:hidden;"></div>
+                </div>
+
+                <!-- Bin table below map -->
+                <div class="glass-panel mt-2">
+                    <div class="card-title">📍 Bin Location Directory</div>
+                    <div style="overflow-x:auto;">
+                        <table id="map-bins-table">
+                            <thead>
+                                <tr>
+                                    <th>Bin Name</th>
+                                    <th>Location</th>
+                                    <th>Capacity</th>
+                                    <th>Current Fill</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div><!-- /page-map -->
+
+        </div><!-- /container -->
+    </div><!-- /dashboard-section -->
+
+    <div id="toast-wrap"></div>
+    <script src="app.js"></script>
+</body>
+
+</html>

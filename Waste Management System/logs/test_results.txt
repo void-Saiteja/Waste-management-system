@@ -1,0 +1,30 @@
+﻿--- STARTING BACKEND TESTS ---
+
+1. Testing Admin Login...
+Γ£à Admin Login Success
+
+2. Testing Staff Registration (test_staff_1771522526306)...
+Γ£à Registration Success
+
+3. Testing Staff Login...
+Γ£à Staff Login Success
+
+4. Testing Admin Fetch Staff List...
+Γ£à New Staff Found in List. ID: 7
+
+5. Testing Admin Assign Targets...
+Γ£à Targets Assigned Successfully
+
+6. Testing Staff Check My Targets...
+Γ£à Staff sees 3 targets
+
+7. Testing Staff Update Progress...
+Γ£à Progress Updated Successfully
+
+8. Testing Admin Check Progress Stats...
+Γ£à Admin sees correct progress (10/50)
+
+9. Testing Admin Delete Staff...
+Γ£à Staff Deleted Successfully
+
+--- TESTS COMPLETED ---

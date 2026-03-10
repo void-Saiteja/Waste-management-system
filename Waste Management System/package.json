@@ -1,0 +1,19 @@
+{
+  "name": "waste-management-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "chart.js": "^4.4.1",
+    "express": "^4.18.2",
+    "express-session": "^1.18.0",
+    "json2csv": "^6.0.0-alpha.2",
+    "pdfkit": "^0.14.0",
+    "sqlite3": "^5.1.7"
+  }
+}
